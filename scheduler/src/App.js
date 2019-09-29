@@ -1,6 +1,8 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import 'rbx/index.css';
+import {Button, Container, Title} from 'rbx';
+// import logo from './logo.svg';
+// import './App.css';
 
 // function App() {
 //   return (
@@ -53,18 +55,19 @@ const terms = {F:'Fall', W: "Winter", S: "Spring"};
 
 //component
 const Banner = props => (
-  <h1>{props.title}</h1>
+  <Title>{props.title}</Title>
 );
 const CourseList = ({courses}) => (
-  <div>
+  <Button.Group>
     { courses.map(course => <Course key={course.id} course={course} />) } 
-  </div>
+  </Button.Group>
 );
 const Course = ({course}) => (
-  <button>
+  // <div>
+  <Button>
     {getCourseTerm(course)} {getCourseDept(course)} {getCourseNum(course)}: {course.title}
-
-  </button>
+  </Button>
+  //</div>
 );
 
 
@@ -77,10 +80,12 @@ const getCourseDept = course => (course.id.slice(2,4));
 
 // App
 const App = () => (
-  <div> 
+  <Container> 
+  <div>
     <Banner title = {schedule.title} />
     <CourseList courses = {schedule.courses} /> 
   </div>
+  </Container>
 );
 
 export default App;
