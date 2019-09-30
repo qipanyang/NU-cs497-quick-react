@@ -1,8 +1,13 @@
 import 'rbx/index.css';
-import {Button, Container, Title} from 'rbx';
+import {Button, Container, Title, Message} from 'rbx';
 import React, {useState, useEffect} from 'react';
 import firebase from 'firebase/app'
 import 'firebase/database'
+import 'firebase/auth';
+import StyleFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+
+
+// google authentication: project-quick_react
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -57,7 +62,7 @@ import 'firebase/database'
 //firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDxqNgiG7wkpDLRo-Ja74GETEwQYDfJgRQ",
-  authDomain: "...",
+  authDomain: "nu-cs497-quickreact.firebaseapp.com",
   databaseURL: "https://nu-cs497-quickreact.firebaseio.com/",
   projectId: "...",
   storageBucket: "....",
@@ -66,6 +71,15 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database().ref();
+const uiConfig = {
+  signInFlow: 'popup',
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+  ],
+  callbacks:{
+    signInSuccessWithAuthResult: () => false
+  }
+};
 
 const terms = {F:'Fall', W: "Winter", S: "Spring"};
 const days = ['M', 'Tu', 'W', 'Th', 'F'];
@@ -111,26 +125,45 @@ const saveCourse = (course, meets) => {
 
 
 //component
-const Banner = ({title}) => (
+const Banner = ({title, user}) => (
+  <React.Fragment>
+    {user ? <Welcome user={user} /> : <SignIn /> }
   <Title>{ title || '[loading...]' }</Title>
+  </React.Fragment>
 );
-const CourseList = ({courses}) => {
+const Welcome = ({user}) => (
+  <Message color="info">
+    <Message.Header>
+      Welcome, {user.displayName}
+      <Button primary onClick={() => firebase.auth().signOut()}>
+        Logout
+      </Button>
+    </Message.Header>
+  </Message>
+);
+const SignIn = () => (
+  <StyleFirebaseAuth
+    uiConfig={uiConfig}
+    firebaseAuth={firebase.auth()}
+  />
+);
+const CourseList = ({courses, user}) => {
   const [term, setTerm] = useState('Fall');
   const [selected, toggle] = useSelection();
   const termCourses = courses.filter(course => term === getCourseTerm(course));
 return(
   <React.Fragment>
     <TermSelector state={{term, setTerm}}/>
-  <div className="buttons">
-    { termCourses.map(course => <Course key={course.id} course={course} state={{selected, toggle}} />) } 
-  </div>
+  <Button.Group>
+    { termCourses.map(course => <Course key={course.id} course={course} state={{selected, toggle}} user={user}/>) } 
+  </Button.Group>
   </React.Fragment>
 );
 };
-const Course = ({course, state}) => (
+const Course = ({course, state, user}) => (
   <Button color={buttonColor(state.selected.includes(course))} 
   onClick={()=>state.toggle(course)}
-  onDoubleClick={()=>moveCourse(course)}
+  onDoubleClick={user ? ()=>moveCourse(course) : null}
   disabled={hasConflict(course, state.selected)}
   >
     {getCourseTerm(course)} CS {getCourseNum(course)}: {course.title}
@@ -168,6 +201,7 @@ const addScheduleTimes = schedule => ({
 // App
 const App = () => {
   const [schedule, setSchedule] = useState ({title: '', courses: []});
+  const [user, setUser] = useState('qipanyang');
   // const url = 'https://courses.cs.northwestern.edu/394/data/cs-courses.php';
   useEffect ( () => {
     // const fetchSchedule = async ( )=> {
@@ -184,12 +218,15 @@ const App = () => {
     return () => {db.off('value', handleData);};
     }, []
   );
+  useEffect(()=>{
+    firebase.auth().onAuthStateChanged(setUser);
+  }, []);
   
   return(
-    <div className="container">
-      <Banner title = {schedule.title} />
-      <CourseList courses = {schedule.courses} /> 
-    </div>
+    <Container>
+      <Banner title = {schedule.title} user={user}/>
+      <CourseList courses = {schedule.courses} user={user}/> 
+    </Container>
   );
 };
 
