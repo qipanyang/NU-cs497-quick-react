@@ -24,7 +24,9 @@ const CourseList = ({courses, user}) => {
   const TermSelector = ({state}) =>  (
       <div className = "field has-addons">
         {Object.values(terms).map(value => 
-        <button key={value} className={buttonColor(value===state.term)} onClick={()=>state.setTerm(value)}> 
+        <button 
+        data-cy={value}
+        key={value} className={buttonColor(value===state.term)} onClick={()=>state.setTerm(value)}> 
           {value} 
         </button>)}
       </div> 
